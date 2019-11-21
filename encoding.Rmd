@@ -1,4 +1,87 @@
+
 ```{r}
+library(caret)
+library(dplyr)
+```
+
+```{r}
+mtcars
+```
+
+```{r}
+train_test_val_split <- function(data,train_perc=0.6,test_perc=0.2) {
+spec = c(train = train_perc, test = test_perc, validate = 1-train_perc-test_perc)
+g = sample(cut(
+  seq(nrow(data)), 
+  nrow(data)*cumsum(c(0,spec)),
+  labels = names(spec)
+))   
+return(split(data, g))
+}
+```
+
+```{r}
+one_hot <- function(data, col) {
+tp <- data
+for (name in col){
+  tp[,name] = as.factor(tp[,name])
+}
+dmy <- dummyVars(paste("~", paste(col, collapse="+"), sep = ""), data = tp)
+trsf <- data.frame(predict(dmy, newdata = tp, na.action = na.omit))
+return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
+}
+```
+
+```{r}
+to_ordinal <- function(data, col) {
+  tp <- data
+  for (name in col){
+    tp[,name] = factor(tp[,name])
+  }
+  return(tp)
+}
+```
+
+```{r}
+standardization <- function(data, col) {
+  tp <- data   
+  std_trained <- preProcess(data[,col], method = c("center", "scale"), na.remove = TRUE)
+  std_trained
+  # return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
+}
 
 ```
+
+```{r}
+data = to_ordinal(mtcars, c("carb"))
+```
+
+```{r}
+splited = train_test_val_split(data)   
+```
+
+```{r}
+splited
+```
+
+```{r}
+traindat = one_hot(splited$train, c("cyl", "gear"))
+valdat = one_hot(splited$validate, c("cyl", "gear"))
+testdat = one_hot(splited$test, c("cyl", "gear"))
+```
+
+```{r}
+standardizer = standardization(traindat,c("mpg", "disp","hp","drat","wt","qsec"))
+```
+
+```{r}
+stdtraindat = predict(standardizer, traindat)
+stdvaldat = predict(standardizer, valdat)
+stdtestdat = predict(standardizer, testdat)
+```
+
+```{r}
+stdtraindat
+```
+
 
