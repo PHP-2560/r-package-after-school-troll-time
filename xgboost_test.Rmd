@@ -1,0 +1,453 @@
+---
+title: "xgboost and other classification model"
+author: "Yijie"
+date: "11/26/2019"
+output: html_document
+---
+##copy from hao xi
+```{r}
+library(caret)
+library(dplyr)
+library(h2o)
+library(devtools)
+#install_github("h2oai/h2o-3/h2o-r/ensemble/h2oEnsemble-package")
+```
+
+```{r}
+train_test_val_split <- function(data,train_perc=0.6,test_perc=0.2) {
+spec = c(train = train_perc, test = test_perc, validate = 1-train_perc-test_perc)
+g = sample(cut(
+  seq(nrow(data)), 
+  nrow(data)*cumsum(c(0,spec)),
+  labels = names(spec)
+))   
+return(split(data, g))
+}
+```
+
+```{r}
+one_hot <- function(data, col) {
+tp <- data
+for (name in col){
+  tp[,name] = as.factor(tp[,name])
+}
+dmy <- dummyVars(paste("~", paste(col, collapse="+"), sep = ""), data = tp)
+trsf <- data.frame(predict(dmy, newdata = tp, na.action = na.omit))
+return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
+}
+```
+
+```{r}
+to_ordinal <- function(data, col) {
+  tp <- data
+  for (name in col){
+    tp[,name] = factor(tp[,name])
+  }
+  return(tp)
+}
+```
+
+```{r}
+standardization <- function(data, col) {
+  tp <- data   
+  std_trained <- preProcess(data[,col], method = c("center", "scale"), na.remove = TRUE)
+  std_trained
+  # return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
+}
+```
+
+```{r}
+data = to_ordinal(mtcars, c("carb"))
+```
+
+```{r}
+splited = train_test_val_split(data)   
+```
+
+```{r}
+splited
+```
+
+```{r}
+traindat = one_hot(splited$train, c("cyl", "gear"))
+valdat = one_hot(splited$validate, c("cyl", "gear"))
+testdat = one_hot(splited$test, c("cyl", "gear"))
+```
+
+```{r}
+standardizer = standardization(traindat,c("mpg", "disp","hp","drat","wt","qsec"))
+```
+
+```{r}
+stdtraindat = predict(standardizer, traindat)
+stdvaldat = predict(standardizer, valdat)
+stdtestdat = predict(standardizer, testdat)
+```
+
+
+# classification model
+model: xgboost1,xgboost2, gradient boost, random forest, svm, navie bayes,
+metrics:auc,accuracy,f1
+--------------------
+input:train,test,val,y,metics
+output: metrics score
+----------------------
+
+```{r}
+train<-stdtraindat
+test<-stdtestdat
+val<-stdvaldat
+y <- "vs"
+x <- setdiff(names(train), y)
+# For binary classification, response should be a factor
+train[,y] <- as.factor(train[,y])
+test[,y] <- as.factor(test[,y])
+val[,y] <- as.factor(val[,y])
+h2o.init(nthreads = -1)
+h2o.no_progress()
+train <- as.h2o(train)
+test<-as.h2o(test)
+val<-as.h2o(val)
+```
+
+```{r}
+model_xgb1<-function(train,test,val,y,nfolds=10,ntrees=100,max_depth=5,min_rows=2,learn_rate=0.2,metrics='auc'){
+x <- setdiff(names(train), y)
+# Train & Cross-validate a (shallow) XGB-GBM
+my_xgb1 <- h2o.xgboost(x = x,
+                       y = y,
+                       training_frame = train,
+                       validation_frame = val,
+                       distribution = "bernoulli",
+                       ntrees = ntrees,
+                       max_depth = max_depth,
+                       min_rows = min_rows,
+                       learn_rate = learn_rate,
+                       nfolds = nfolds,
+                       fold_assignment = "Modulo",
+                       keep_cross_validation_predictions = TRUE,
+                       seed = 1)
+perf <- h2o.performance(my_xgb1, newdata = test)
+auc <- h2o.auc(perf)
+acc <- h2o.accuracy(perf, 0.5)
+f1 <- h2o.F1(perf)
+
+if (metrics == 'auc') {
+  return(auc)}
+else if (metrics == 'acc') {
+return(acc)
+}
+else if (metrics == 'f1') {
+return(f1)
+}
+}
+model_xgb1(train,test,val,y="vs")
+```
+
+
+```{r}
+model_gbm<-function(train,test,val,y,nfolds=10,max_depth=5,min_rows=2,learn_rate=0.2,metrics='auc'){
+x <- setdiff(names(train), y)
+# Identify predictors and response
+my_gbm <- h2o.gbm(x = x,
+                  y = y,
+                  training_frame = train,
+                  validation_frame = val,
+                  distribution = "bernoulli",
+                  max_depth = max_depth,
+                  min_rows = min_rows,
+                  learn_rate = learn_rate,
+                  nfolds = nfolds,
+                  fold_assignment = "Modulo",
+                  keep_cross_validation_predictions = TRUE,
+                  seed = 1)
+perf <- h2o.performance(my_gbm, newdata = test)
+auc <- h2o.auc(perf)
+acc <- h2o.accuracy(perf, 0.5)
+f1 <- h2o.F1(perf)
+if (metrics == 'auc') {
+  return(auc)}
+else if (metrics == 'acc') {
+return(acc)
+}
+else if (metrics == 'f1') {
+return(f1)
+}
+}
+model_gbm(train,test,val,y="vs")
+```
+
+```{r}
+model_rf<-function(train,test,val,y,nfolds=10,metrics='auc'){
+
+x <- setdiff(names(train), y)
+my_rf <- h2o.randomForest(x = x,
+                          y = y,
+                          training_frame = train,
+                          validation_frame = val,
+                          nfolds = nfolds,
+                          fold_assignment = "Modulo",
+                          keep_cross_validation_predictions = TRUE,
+                          seed = 1)
+
+perf <- h2o.performance(my_rf, newdata = test)
+auc <- h2o.auc(perf)
+acc <- h2o.accuracy(perf, 0.5)
+f1 <- h2o.F1(perf)
+if (metrics == 'auc') {
+  return(auc)}
+else if (metrics == 'acc') {
+return(acc)
+}
+else if (metrics == 'f1') {
+return(f1)
+}
+}
+model_rf(train,test,val,y="vs")
+```
+```{r}
+model_xgb2<-function(train,test,val,y,nfolds=10,ntrees=100,max_depth=5,min_rows=2,learn_rate=0.2,sample_rate=0.7,col_sample_rate=0.9,metrics='auc'){
+x <- setdiff(names(train), y)
+# Train & Cross-validate a (deeper) XGB-GBM
+
+my_xgb2 <- h2o.xgboost(x = x,
+                       y = y,
+                       training_frame = train,
+                       validation_frame = val,
+                       distribution = "bernoulli",
+                       ntrees = ntrees,
+                       max_depth = max_depth,
+                       min_rows = min_rows,
+                       learn_rate = learn_rate,
+                       sample_rate = sample_rate,
+                       col_sample_rate = col_sample_rate,
+                       nfolds = nfolds,
+                       fold_assignment = "Modulo",
+                       keep_cross_validation_predictions = TRUE,
+                       seed = 1)
+
+perf <- h2o.performance(my_xgb2, newdata = test)
+auc <- h2o.auc(perf)
+acc <- h2o.accuracy(perf, 0.5)
+f1 <- h2o.F1(perf)
+
+if (metrics == 'auc') {
+  return(auc)}
+else if (metrics == 'acc') {
+return(acc)
+}
+else if (metrics == 'f1') {
+return(f1)
+}
+}
+model_xgb2(train,test,val,y="vs")
+```
+
+```{r}
+model_psvm<-function(train,test,val,y,hyper_param=1,kernel_type = c("gaussian"),gamma = -1,max_iterations = 200,metrics='auc'){
+x <- setdiff(names(train), y)
+# Train & Cross-validate a (deeper) XGB-GBM
+
+my_psvm <- h2o.psvm(
+  x = x,
+  y = y,
+  training_frame = train,
+  validation_frame = val,
+  hyper_param = hyper_param,
+  kernel_type = kernel_type,
+  gamma = gamma,
+  max_iterations = max_iterations,
+  seed = 1
+  )
+  
+perf <- h2o.performance(my_psvm, newdata = test)
+auc <- h2o.auc(perf)
+acc <- h2o.accuracy(perf, 0.5)
+f1 <- h2o.F1(perf)
+
+if (metrics == 'auc') {
+  return(auc)}
+else if (metrics == 'acc') {
+return(acc)
+}
+else if (metrics == 'f1') {
+return(f1)
+}
+}
+model_psvm(train,test,val,y="vs")
+
+```
+
+```{r}
+model_nb<-function(train,test,val,y,nfolds=10,laplace=0,metrics='auc'){
+x <- setdiff(names(train), y)
+# Train & Cross-validate a (deeper) XGB-GBM
+
+my_nb <- h2o.naiveBayes(
+  x = x,
+  y = y,
+  training_frame = train,
+  validation_frame = val,
+  nfolds = nfolds,
+  fold_assignment =  "Modulo",
+  laplace=laplace
+  )
+  
+perf <- h2o.performance(my_nb, newdata = test)
+auc <- h2o.auc(perf)
+acc <- h2o.accuracy(perf, 0.5)
+f1 <- h2o.F1(perf)
+
+if (metrics == 'auc') {
+  return(auc)}
+else if (metrics == 'acc') {
+return(acc)
+}
+else if (metrics == 'f1') {
+return(f1)
+}
+}
+model_nb(train,test,val,y="vs")
+```
+
+#ensemble model
+
+
+
+```{r create_ensemble}
+
+
+ensemble<-function(train,test,val,y,xgb1=TRUE,xgb2=TRUE, gb=TRUE, rf=TRUE, svm=TRUE, nb=TRUE,nfolds=10,metrics='auc')
+{
+x <- setdiff(names(train), y)
+my_xgb1 <- h2o.xgboost(x = x,
+                       y = y,
+                       training_frame = train,
+                       validation_frame = val,
+                       distribution = "bernoulli",
+                       ntrees=100,max_depth=5,min_rows=2,learn_rate=0.2,
+                       nfolds = nfolds,
+                       fold_assignment = "Modulo",
+                       keep_cross_validation_predictions = TRUE,
+                       seed = 1)
+
+
+my_xgb2 <- h2o.xgboost(x = x,
+                       y = y,
+                       training_frame = train,
+                       validation_frame = val,
+                       distribution = "bernoulli",
+                       ntrees=100,max_depth=5,min_rows=2,learn_rate=0.2,sample_rate=0.7,col_sample_rate=0.9,
+                       nfolds = nfolds,
+                       fold_assignment = "Modulo",
+                       keep_cross_validation_predictions = TRUE,
+                       seed = 1)
+
+
+my_gbm <- h2o.gbm(x = x,
+                  y = y,
+                  training_frame = train,
+                  validation_frame = val,
+                  distribution = "bernoulli",
+                  max_depth = 3,
+                  min_rows = 2,
+                  learn_rate = 0.2,
+                  nfolds = nfolds,
+                  fold_assignment = "Modulo",
+                  keep_cross_validation_predictions = TRUE,
+                  seed = 1)
+
+my_rf <- h2o.randomForest(x = x,
+                          y = y,
+                          training_frame = train,
+                          validation_frame = val,
+                          nfolds = nfolds,
+                          fold_assignment = "Modulo",
+                          keep_cross_validation_predictions = TRUE,
+                          seed = 1)
+
+my_psvm <- h2o.psvm(
+  x = x,
+  y = y,
+  training_frame = train,
+  validation_frame = val,
+  hyper_param=1,kernel_type = c("gaussian"),gamma = -1,max_iterations = 200,
+  seed = 1
+  )
+
+my_nb <- h2o.naiveBayes(
+  x = x,
+  y = y,
+  training_frame = train,
+  validation_frame = val,
+  nfolds = nfolds,
+  fold_assignment =  "Modulo",
+  laplace=0
+  )
+
+
+# Train a stacked ensemble using the H2O and XGBoost models from above
+base_models <-c()
+if (xgb1==TRUE) {
+  base_models <- c(base_models, my_xgb1@model_id)
+} else if (xgb2 == TRUE) {
+base_models <- c(base_models, my_xgb2@model_id)
+} else if (gb ==TRUE) {
+base_models <- c(base_models, my_gbm@model_id)
+} else if (rf == TRUE) {
+base_models <- c(base_models, my_rf@model_id)
+} else if (svm == TRUE) {
+base_models <- c(base_models, my_psvm@model_id)
+} else if (nb == TRUE) {
+base_models <- c(base_models, my_nb@model_id)
+}
+
+ensemble <- h2o.stackedEnsemble(x = x,
+                                y = y,
+                                training_frame = train,
+                                validation_frame = val,
+                                base_models = base_models)
+# Eval ensemble performance on a test set
+perf <- h2o.performance(ensemble, newdata = test)
+# Compare to base learner performance on the test set
+get_auc <- function(mm) h2o.auc(h2o.performance(h2o.getModel(mm), newdata = test))
+baselearner_aucs <- sapply(base_models, get_auc)
+baselearner_best_auc_test <- max(baselearner_aucs)
+ensemble_auc_test <- h2o.auc(perf)
+print(sprintf("Best Base-learner Test AUC:  %s", baselearner_best_auc_test))
+print(sprintf("Ensemble Test AUC:  %s", ensemble_auc_test))
+return(max(ensemble_auc_test,baselearner_best_auc_test))
+}
+```
+
+Compare the test set performance of the best base model to the ensemble.
+
+```{r}
+ensemble(train,test,val,y="vs")
+
+```
+
+
+##predict 
+
+```{r}
+
+x <- setdiff(names(train), y)
+my_xgb1 <- h2o.xgboost(x = x,
+                       y = y,
+                       training_frame = train,
+                       validation_frame = val,
+                       distribution = "bernoulli",
+                       ntrees=100,max_depth=5,min_rows=2,learn_rate=0.2,
+                       nfolds = nfolds,
+                       fold_assignment = "Modulo",
+                       keep_cross_validation_predictions = TRUE,
+                       seed = 1)
+
+
+finalmodel_predictions<-h2o.predict(
+  object = my_xgb1
+  ,newdata = test)
+finalmodel_predictions$predict 
+```
+
