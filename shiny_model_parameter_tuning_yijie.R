@@ -14,7 +14,7 @@ ui <- fluidPage(
       10,
       radioButtons(
         "model",
-        h2("Model"),
+        h4("Model"),
         choices = list(
           "Xgboost (lighter)" ,
           "Xgboost (deeper)" ,
@@ -26,18 +26,18 @@ ui <- fluidPage(
         selected = "SVM"
       ),
       conditionalPanel("input.model === 'SVM'",
-                       sliderInput("hyper_param", h3("C"),
+                       sliderInput("hyper_param", h5("C"),
                                    min = 0, max = 100, value = 1
                        )),
       
-      conditionalPanel("input.model === 'Gradient Boost'|'Xgboost (lighter)'|'Xgboost (deeper)'",
-                       sliderInput("max_depth", h3("max depth"),
+      conditionalPanel("input.model == 'Gradient Boost' || input.model == 'Xgboost (lighter)'|| input.model == 'Xgboost (deeper)'",
+                       sliderInput("max_depth", h5("max depth"),
                                    min = 1, max = 20, value = 5
                        ),
-                       sliderInput("ntrees", h3("number of trees"),
+                       sliderInput("ntrees", h5("number of trees"),
                                    min = 1, max = 100, value = 30
                        ),
-                       sliderInput("learn_rate", h3("learning rate"),
+                       sliderInput("learn_rate", h5("learning rate"),
                                    min = 0, max = 1, value = 0.2
                        ))
     )),
@@ -47,7 +47,7 @@ ui <- fluidPage(
       3,
       checkboxGroupInput(
         "metrics",
-        h3("Metrics"),
+        h4("Metrics"),
         choices = list("AUC", "Accuracy",
                        "F1"),
         selected = "AUC"
@@ -58,8 +58,8 @@ ui <- fluidPage(
     actionButton("select", "Select")
   ),
   mainPanel(#textOutput("selected"),
-    textOutput("result"),
-    textOutput("selected2"))
+    textOutput("result"))
+    #textOutput("selected2"))
 )
 
 
@@ -67,30 +67,28 @@ ui <- fluidPage(
 # Define server logic ----
 server <- function(input, output) {
   # Define a reactive expression for the document term matrix
-  metrics <- eventReactive(input$select, {
+  model.metrics <- eventReactive(input$select, {
     input$metrics
   })
-  model<-eventReactive(input$select, {
+  model.model<-eventReactive(input$select, {
     input$model
   })
-  
-  
-  hyper_param<- eventReactive(input$select, {
+  model.hyper_param<- eventReactive(input$select, {
     input$hyper_param
   })
-  max_depth<- eventReactive(input$select, {
+  model.max_depth<- eventReactive(input$select, {
     input$max_depth
   })
-  ntrees<- eventReactive(input$select, {
+  model.ntrees<- eventReactive(input$select, {
     input$ntrees
   })
-  learn_rate<- eventReactive(input$select, {
+  model.learn_rate<- eventReactive(input$select, {
     input$learn_rate
   })
   
   
-  
   output$result <- renderText({
+    #--------copy from xihao-----------start 
     train_test_val_split <-
       function(data,
                train_perc = 0.6,
@@ -149,6 +147,9 @@ server <- function(input, output) {
     stdvaldat = predict(standardizer, valdat)
     stdtestdat = predict(standardizer, testdat)
     
+    
+    #--------copy from xihao-----------over
+    #---yijie starts----
     train <- stdtraindat
     test <- stdtestdat
     val <- stdvaldat
@@ -163,24 +164,17 @@ server <- function(input, output) {
     train <- as.h2o(train)
     test <- as.h2o(test)
     val <- as.h2o(val)
-    
-    result <-
-      new_model(
-        train,
-        test,
-        val,
-        y = "vs",
-        model = model,
-        metrics = metrics,svm.hyper_param=hyper_param,ntrees = ntrees,
-        max_depth = max_depth,
-        learn_rate = learn_rate
-      )
+
+
+    result <-new_model(train=train,test=test,val=val,y = "vs",
+        metrics=model.metrics(),
+        model=model.model(),
+        hyper_param=model.hyper_param(),ntrees = model.ntrees(),max_depth = model.max_depth(),learn_rate = model.learn_rate())
     result
   })
   
   
-  output$selected2 <- renderText({"Done!"
-  })
+  #output$selected2 <- renderText({"Done!"})
   
 }
 

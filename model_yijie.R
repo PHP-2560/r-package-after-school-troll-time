@@ -9,8 +9,7 @@ new_model <-
            val,
            y,
            model = "Xgboost (lighter)",
-           nfolds = 10,
-           metrics = 'AUC',svm.hyper_param=1,max_depth=5,ntrees=30,learn_rate=0.2)
+           metrics = 'AUC',nfolds = 10,hyper_param=1,max_depth=5,ntrees=30,learn_rate=0.2)
   {
     x <- setdiff(names(train), y)
     if (model == "Xgboost (lighter)") {
@@ -87,7 +86,7 @@ new_model <-
         y = y,
         training_frame = train,
         validation_frame = val,
-        hyper_param = svm.hyper_param,
+        hyper_param = hyper_param,
         kernel_type = c("gaussian"),
         gamma = -1,
         max_iterations = 200,
@@ -114,17 +113,23 @@ new_model <-
     
     result <- c()
     if ( 'AUC' %in% metrics) {
-      result <- c(result, paste("\nThe AUC of the " , input$model, "is", auc,".\n"))
+      result <- c(result, paste("\nThe AUC of the " , model, "is", auc,".\n"))
     }
     if ('Accuracy' %in% metrics) {
       result <-
         c(result,
-          paste("\nThe accuracy of the " , input$model, "is", acc,".\n"))
+          paste("\nThe accuracy of the " , model, "is", acc,".\n"))
     }
     if ('F1' %in% metrics) {
       result <-
         c(result,
-          paste("\nThe F1 score of the " , input$model, "is", f1,".\n"))
+          paste("\nThe F1 score of the " ,model, "is", f1,".\n"))
     }
     return(result)
   }
+
+
+
+
+
+
