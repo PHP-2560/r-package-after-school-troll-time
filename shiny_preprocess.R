@@ -64,20 +64,18 @@ if (interactive()) {
 #  to use testing data, simply call  
 #  df = req(getdat2()$test)
 
-    getdat2 <- reactive({
-      if (input$confirmonehot) {
+    getdat2 <- eventReactive(input$confirmonehot, {
         df = req(getdat())
         tp = to_ordinal(df, input$ordinalselector) 
         tp = one_hot(tp, input$onehotselector)
-        splited = train_test_val_split(tp,test_perc = input$testp) 
+        splited = train_test_split(tp,test_perc = input$testp) 
         standardizer = standardization(splited$train, input$stdselector) 
         splited$train = predict(standardizer, splited$train)
-        splited$validate = predict(standardizer, splited$validate)
         splited$test = predict(standardizer, splited$test)
         return(splited)
-      }
     })
 
+    
     observeEvent(input$confirmonehot, {
       # removeUI(selector = "#getdat")
       

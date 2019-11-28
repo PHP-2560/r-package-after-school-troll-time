@@ -1,8 +1,8 @@
 library(caret)
 library(dplyr)
 
-train_test_val_split <- function(data,train_perc=0.6,test_perc=0.2) {
-  spec = c(train = train_perc, test = test_perc, validate = 1-train_perc-test_perc)
+train_test_split <- function(data, test_perc=0.2) {
+  spec = c(train = 1-test_perc, test = test_perc)
   g = sample(cut(
     seq(nrow(data)), 
     nrow(data)*cumsum(c(0,spec)),
