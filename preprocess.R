@@ -12,6 +12,7 @@ train_test_val_split <- function(data,train_perc=0.6,test_perc=0.2) {
 }
 
 one_hot <- function(data, col) {
+  if(length(col)==0){return(data)}
   tp <- data
   for (name in col){
     tp[,name] = as.factor(tp[,name])
