@@ -204,8 +204,7 @@ return(f1)
 }
 }
 
-new_model (train,test,val,y="vs",model="xgb1")
-
+new_model (train,test,val,y="vs",model="xgb1",metrics='auc')
 
 ```
 
@@ -225,7 +224,6 @@ my_xgb1 <- h2o.xgboost(x = x,
                        fold_assignment = "Modulo",
                        keep_cross_validation_predictions = TRUE,
                        seed = 1)
-
 
 finalmodel_predictions<-h2o.predict(
   object = my_xgb1
