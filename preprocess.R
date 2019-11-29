@@ -37,3 +37,4 @@ standardization <- function(data, col) {
   # return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
 }
 
+
