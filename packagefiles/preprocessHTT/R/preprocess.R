@@ -4,10 +4,10 @@ library(dplyr)
 train_test_split <- function(data, test_perc=0.2) {
   spec = c(train = 1-test_perc, test = test_perc)
   g = sample(cut(
-    seq(nrow(data)), 
+    seq(nrow(data)),
     nrow(data)*cumsum(c(0,spec)),
     labels = names(spec)
-  ))   
+  ))
   return(split(data, g))
 }
 
@@ -31,10 +31,16 @@ to_ordinal <- function(data, col) {
 }
 
 standardization <- function(data, col) {
-  tp <- data   
+  tp <- data
   std_trained <- preProcess(data[col], method = c("center", "scale"), na.remove = TRUE)
   std_trained
   # return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
+}
+
+uniqueVar <- function(data) {
+  tp = rbind(rapply(data,function(x)length(unique(x))), rapply(mtcars,function(x)class(x)))
+  rownames(tp) = c("unique values", "class")
+  print(tp)
 }
 
 
