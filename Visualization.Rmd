@@ -21,63 +21,55 @@ library(RColorBrewer)
 
 # Scatterplot
 
-
 ```{r}
-scatterplot <- function(data, xvar, yvar, color = cvar, shape = svar, size=zvar) {
-ggplot(data, aes_string(x=xvar, y=yvar, color=color, shape = shape, size = size)) +   
-  geom_point()  + 
-  labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+scatterplot <- function(data, xvar=xvar, yvar=yvar, color = cvar, shape = svar, size=zvar, 
+                        jitter_width=0, jitter_height = 0,
+                        regression = FALSE, method="auto", se=TRUE,fullrange=TRUE,
+                        facet = FALSE, fvar = NULL) {
+  basic <- ggplot(data, aes_string(x=xvar, y=yvar, color=color, shape = shape, size = size)) +  
+    # Jitter the points: Jitter range is 0.1 on the x-axis, .5 on the y-axis
+    geom_point(position = position_jitter(width=jitter_width,height=jitter_height))  + 
+    labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
+    theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+    # Add a loess smoothed fit curve with confidence region (by default includes 95% confidence region)
+  if (regression == TRUE){
+    basic <- basic+geom_smooth(method = method, se=se,fullrange = fullrange) 
+  }  
+  
+  if (facet == TRUE){
+    basic <- basic + facet_grid(. ~ data[, fvar])  
+  }
+  basic
 }
-```
 
-```{r}
-scatterplot(mtcars, "disp", "hp" ,color="cyl", shape = "am", size = NULL)
 ```
 
 
 ```{r}
-scatterplot_category <- function(data, xvar, yvar, ..., width=0.1, height=0.5 ) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-# Jitter the points: Jitter range is 0.1 on the x-axis, .5 on the y-axis
-  geom_point(position = position_jitter(width=width,height=height))  + 
-  labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
-}
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape ="am", size = NULL)
 ```
 
 ```{r}
-scatterplot_category(mtcars, "am", "hp" ,color=mtcars$carb, shape = mtcars$am)
+scatterplot(mtcars, "am", "hp" ,color="cyl", shape =NULL, size = NULL, jitter_height = 0.5, jitter_width = 0.1)
 ```
 
 
 ```{r}
-scatterplot_regression <- function(data, xvar, yvar, ..., method="auto", se=TRUE,fullrange=TRUE) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_point()  + 
-  labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
-  geom_smooth(method = method, se=se,fullrange = fullrange)   # Add a loess smoothed fit curve with confidence region 
-                             #  (by default includes 95% confidence region)
-}
-```
-```{r}
-scatterplot_regression(mtcars, "disp", "hp" ,color=mtcars$carb)
-```
-
-
-```{r}
-scatterplot_facet <- function(data, xvar, yvar, ..., fvar) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_point()  + 
-  labs(title=paste(xvar, "vs.", yvar, "by", fvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
-  facet_grid(. ~ data[, fvar])  
-}
+scatterplot(mtcars, "disp", "hp" ,color="vs", size = NULL, shape = NULL, regression = TRUE)
 ```
 
 ```{r}
-scatterplot_facet(mtcars, "disp", "hp" ,color=mtcars$carb, fvar="cyl")
+scatterplot(mtcars, "disp", "hp" ,color="vs", size = NULL, shape = NULL, 
+            regression = TRUE, method = lm, se=FALSE, fullrange = FALSE)
+```
+
+```{r}
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape ="am", size = NULL,  facet = TRUE, fvar = "cyl")
+```
+
+
+```{r}
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape =NULL, size = NULL, regression = TRUE, method=lm, facet = TRUE, fvar = "cyl")
 ```
 
 
