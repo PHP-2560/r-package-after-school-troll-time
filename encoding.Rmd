@@ -7,6 +7,9 @@ library(dplyr)
 ```{r}
 mtcars
 ```
+```{r}
+colnames(mtcars)
+```
 
 ```{r}
 train_test_val_split <- function(data,train_perc=0.6,test_perc=0.2) {
@@ -45,11 +48,23 @@ to_ordinal <- function(data, col) {
 ```{r}
 standardization <- function(data, col) {
   tp <- data   
-  std_trained <- preProcess(data[,col], method = c("center", "scale"), na.remove = TRUE)
+  std_trained <- preProcess(data[col], method = c("center", "scale"), na.remove = TRUE)
   std_trained
   # return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
 }
 
+```
+
+```{r}
+uniqueVar <- function(data) {
+  tp = rbind(rapply(data,function(x)length(unique(x))), rapply(mtcars,function(x)class(x)))
+  rownames(tp) = c("unique values", "class")
+  print(tp)
+}
+```
+
+```{r}
+uniqueVar(mtcars)
 ```
 
 ```{r}
