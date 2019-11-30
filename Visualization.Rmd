@@ -21,9 +21,10 @@ library(RColorBrewer)
 
 # Scatterplot
 
+
 ```{r}
-scatterplot <- function(data, xvar, yvar, ...) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
+scatterplot <- function(data, xvar, yvar, color = cvar, shape = svar, size=zvar) {
+ggplot(data, aes_string(x=xvar, y=yvar, color=color, shape = shape, size = size)) +   
   geom_point()  + 
   labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
@@ -31,7 +32,7 @@ ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +
 ```
 
 ```{r}
-scatterplot(mtcars, "disp", "hp" ,color=mtcars$carb, shape = mtcars$am)
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape = "am", size = NULL)
 ```
 
 
