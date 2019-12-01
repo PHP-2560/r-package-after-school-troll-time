@@ -155,85 +155,67 @@ density(mtcars, xvar = "wt", fill="cyl", group.mean="cyl")
 # barplot
 
 ```{r}
-barplot <- function(data, xvar, y=NULL,fill=NULL,position = "dodge",stat="identity",width=0.7,...) {
-ggplot(data, aes_string(x=xvar, y=y, fill=fill,...)) +   
-  geom_bar(position=position, stat=stat, width = width, alpha=.2)  + 
+barplot <- function(data, xvar=xvar, yvar=NULL,fill=NULL,position = "dodge",stat="identity",width=0.7,coord_flip =FALSE,alpha=0.2,facet=FALSE, fvar=NULL,...) {
+  
+basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill,...)) +   
+  geom_bar(position=position, stat=stat, width = width, alpha=alpha)  + 
   labs(title=paste("Bar plot by", xvar), x =xvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+
+if (coord_flip==TRUE){
+  basic <- basic + coord_flip()
+} 
+
+if (facet==TRUE){
+  basic <- basic + facet_grid(. ~ data[, fvar])  
+}
+
+basic
+
 }
 ```
 
-
-
 ```{r}
-barplot(mtcars, "vs", y="hp" ,fill="am", position="dodge")
+barplot(mtcars, xvar = "am", yvar = "disp", fill="carb", facet=TRUE, fvar="cyl")
 ```
 
 
 ```{r}
-barplot_aggregation <- function(data, xvar = xvar, yvar= yvar, agg.function = mean, position = "dodge",width=0.7,...) {
-if (as.character(substitute(agg.function))!= "count"){
-       #calculate mean/max/min/sum value of x for each group
+barplot(mtcars, "cyl", y="hp" ,fill="am", position="dodge", alpha=0.2)
+```
+
+
+
+```{r}
+barplot_aggregation <- function(data, xvar, yvar, agg.function = mean, 
+                                position = "dodge",width=0.7,coord_flip =FALSE,alpha=0.5,...) {
+    #calculate mean/max/min/sum value of x for each group
     aggregation <- function(data, facs, bar, agg.function) {
     res <- ddply(data, facs, function(dfr, colnm){agg.function(dfr[,colnm])}, bar)
     res
     }
     table <- aggregation(data, xvar, yvar, agg.function=agg.function) 
-    print(table)
-
-} else {
-    # calculate counts of x for each group
-  aggregation <- function(dfr, facs) {count(dfr, facs)}
-  table <- aggregation(data, xvar)
-  print(table)
-  }
-  
-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1],...)) +   
-  geom_bar(position=position, stat="identity", width = width, alpha=.5)  + 
-  labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by", xvar), 
+basic <-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1],...)) +   
+  geom_bar(position=position, stat="identity", width = width, alpha=alpha)  + 
+  labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by",xvar ), 
        x=xvar, y=paste( as.character(substitute(agg.function)), "of", yvar), fill=xvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5)) 
 
-  
-}
+if (coord_flip==TRUE){
+  return(basic + coord_flip())
+} else{
+  return(basic)
+}  
+} 
+
 ```
 
 ```{r}
-barplot_aggregation(mtcars, xvar = "am", yvar="disp",agg.function = min)
+barplot_aggregation(mtcars, xvar = "gear", yvar="disp",agg.function = min)
 ```
 
 ```{r}
-barplot_aggregation(mtcars, group = "cyl", y="disp",agg.function = mean)
-```
-
-```{r}
-barplot(mtcars, "carb", y="carb", stat="count", fill="am")
-```
-
-```{r}
-horizontal_barplot <- function(data, xvar, position = "dodge",stat="identity",width=0.7,...) {
-ggplot(data, aes(x=data[, xvar], ...)) +   
-  geom_bar(position=position, stat=stat, width = width)  + 
-  labs(title=paste("Bar plot by", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
-  coord_flip()
-}
-```
-```{r}
-horizontal_barplot(mtcars, "am", y=mtcars$disp ,fill=mtcars$carb)
-```
-
-```{r}
-barplot_facet <- function(data, xvar, position = "dodge",stat="identity",width=0.7,..., fvar) {
-ggplot(data, aes(x=data[, xvar], ...)) +   
-  geom_bar(position=position, stat=stat, width = width)  + 
-  labs(title=paste("Bar plot by", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5)) + 
-  facet_grid(. ~ data[, fvar])  
-}
-```
-```{r}
-barplot_facet(mtcars, "am", y=mtcars$disp, fill=mtcars$carb, fvar="cyl")
+barplot_aggregation(mtcars, xvar = "gear", yvar="disp",agg.function = mean, coord_flip = TRUE)
 ```
 
 
