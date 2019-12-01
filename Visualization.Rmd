@@ -85,22 +85,22 @@ ddply(mtcars, "cyl", summarise, grp.mean=mean(disp))
 
 
 ```{r}
-histogram <- function(data, xvar, fill=NULL, group = NULL, binwidth=200, alpha=.5, position="identity"){
+histogram <- function(data, xvar, fill=NULL, group.mean = NULL, binwidth=200, alpha=.4, position="identity"){
   basic <- ggplot(data, aes_string(x=xvar, fill = fill)) +
   geom_histogram(binwidth=binwidth, alpha=alpha, position=position, colour="black")+ 
   labs(title=paste("Histogram of", xvar), x =xvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
   
-if (!is.null(group)){
+if (!is.null(group.mean)){
   # calculate the mean value for each group  
   foo <- function(data, facs, bar) {
     res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
     res
   }
-  mu <- foo(data, group, xvar)
+  mu <- foo(data, group.mean, xvar)
   
   basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
-    labs(color=group)
+    labs(color=group.mean)
 }   else {
   basic <- basic+
     geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
@@ -111,50 +111,103 @@ if (!is.null(group)){
 ```
 
 ```{r}
-histogram(mtcars, xvar = "disp", fill = "vs", position = "identity",  binwidth=100,group="vs")
+histogram(mtcars, xvar = "disp", fill = "vs", position = "identity",  binwidth=100,group.mean="vs")
 ```
 
-
-# Density plots
-ggplot(dat, aes(x=rating, colour=cond)) + geom_density()
-
-# Density plots with semi-transparent fill
-ggplot(dat, aes(x=rating, fill=cond)) + geom_density(alpha=.3)
 
 # densityplot
 
 ```{r}
-# Histogram overlaid with kernel density curve
-density <- function(data, xvar,..., binwidth=0.5){
-  ggplot(data, aes(x=data[,xvar],...)) + 
+density <- function(data, xvar,fill = NULL, group.mean = NULL, binwidth=0.5){
+  basic <- ggplot(data, aes_string(x=xvar,fill=fill)) + 
   geom_density(alpha=.2)+  # Overlay with transparent density plot 
   labs(title=paste("Density plot of", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
+  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+  
+if (!is.null(group.mean)){
+  # calculate the mean value for each group  
+  foo <- function(data, facs, bar) {
+    res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
+    res
+  }
+  mu <- foo(data, group.mean, xvar)
+  
+  basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
+    labs(color=group.mean)
+}   else {
+  basic <- basic+
     geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
                color="red", linetype="dashed", size=1)
+}
+  basic
 }
 ```
 
 ```{r}
-density(mtcars, xvar = "wt", fill=mtcars$cyl)
+density(mtcars, xvar = "wt", fill="cyl")
 ```
+```{r}
+density(mtcars, xvar = "wt", fill="cyl", group.mean="cyl")
+```
+
+
 
 # barplot
 
 ```{r}
-barplot <- function(data, xvar, position = "dodge",stat="identity",width=0.7,...) {
-ggplot(data, aes(x=data[, xvar], ...)) +   
-  geom_bar(position=position, stat=stat, width = width)  + 
+barplot <- function(data, xvar, y=NULL,fill=NULL,position = "dodge",stat="identity",width=0.7,...) {
+ggplot(data, aes_string(x=xvar, y=y, fill=fill,...)) +   
+  geom_bar(position=position, stat=stat, width = width, alpha=.2)  + 
   labs(title=paste("Bar plot by", xvar), x =xvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
 }
 ```
+
+
+
 ```{r}
-barplot(mtcars, "am", y=mtcars$disp ,fill=mtcars$carb)
+barplot(mtcars, "vs", y="hp" ,fill="am", position="dodge")
+```
+
+
+```{r}
+barplot_aggregation <- function(data, xvar = xvar, yvar= yvar, agg.function = mean, position = "dodge",width=0.7,...) {
+if (as.character(substitute(agg.function))!= "count"){
+       #calculate mean/max/min/sum value of x for each group
+    aggregation <- function(data, facs, bar, agg.function) {
+    res <- ddply(data, facs, function(dfr, colnm){agg.function(dfr[,colnm])}, bar)
+    res
+    }
+    table <- aggregation(data, xvar, yvar, agg.function=agg.function) 
+    print(table)
+
+} else {
+    # calculate counts of x for each group
+  aggregation <- function(dfr, facs) {count(dfr, facs)}
+  table <- aggregation(data, xvar)
+  print(table)
+  }
+  
+  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1],...)) +   
+  geom_bar(position=position, stat="identity", width = width, alpha=.5)  + 
+  labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by", xvar), 
+       x=xvar, y=paste( as.character(substitute(agg.function)), "of", yvar), fill=xvar)+ 
+  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5)) 
+
+  
+}
 ```
 
 ```{r}
-barplot(mtcars, "carb", stat="count", fill=mtcars$am)
+barplot_aggregation(mtcars, xvar = "am", yvar="disp",agg.function = min)
+```
+
+```{r}
+barplot_aggregation(mtcars, group = "cyl", y="disp",agg.function = mean)
+```
+
+```{r}
+barplot(mtcars, "carb", y="carb", stat="count", fill="am")
 ```
 
 ```{r}
