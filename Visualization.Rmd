@@ -75,21 +75,44 @@ scatterplot(mtcars, "disp", "hp" ,color="cyl", shape =NULL, size = NULL, regress
 
 
 # histogram
+
+library(plyr)
+mu <- ddply(df, "sex", summarise, grp.mean=mean(weight))
+head(mu)
 ```{r}
-histogram <- function(data, xvar, ..., binwidth=200, alpha=.5, position="identity"){
-  ggplot(data, aes(x=data[,xvar],...)) +
+ddply(mtcars, "cyl", summarise, grp.mean=mean(disp))
+```
+
+
+```{r}
+histogram <- function(data, xvar, fill=NULL, group = NULL, binwidth=200, alpha=.5, position="identity"){
+  basic <- ggplot(data, aes_string(x=xvar, fill = fill)) +
   geom_histogram(binwidth=binwidth, alpha=alpha, position=position, colour="black")+ 
   labs(title=paste("Histogram of", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
+  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+  
+if (!is.null(group)){
+  # calculate the mean value for each group  
+  foo <- function(data, facs, bar) {
+    res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
+    res
+  }
+  mu <- foo(data, group, xvar)
+  
+  basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
+    labs(color=group)
+}   else {
+  basic <- basic+
     geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
                color="red", linetype="dashed", size=1)
+}
+  basic
 }
 ```
 
 ```{r}
-histogram(mtcars, xvar = "hp", fill = mtcars$cyl)
+histogram(mtcars, xvar = "disp", fill = "vs", position = "identity",  binwidth=100,group="vs")
 ```
-
 
 
 # Density plots
