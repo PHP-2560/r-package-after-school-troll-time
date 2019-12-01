@@ -223,28 +223,24 @@ barplot_aggregation(mtcars, xvar = "gear", yvar="disp",agg.function = mean, coor
 # boxplot
 
 ```{r}
-boxplot <- function(data, xvar, yvar, ...) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_boxplot()  + 
-  labs(title=paste("Box plot of", xvar, "by", yvar), x =xvar, y = yvar)+ 
+boxplot <- function(data, xvar, yvar, fill=NULL, coord_flip =FALSE, alpha=0.5, ...) {
+basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill,...)) +   
+  geom_boxplot(alpha=alpha)  + 
+  labs(title=paste("Box plot of", yvar, "by", xvar), x =xvar, y = yvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+
+if (coord_flip==TRUE){
+  basic <- basic + coord_flip()
+}
+basic
 }
 ```
 ```{r}
-boxplot(mtcars, "cyl", y="disp" ,fill=mtcars$am)
+boxplot(mtcars, "cyl", y="disp" ,fill="am", coord_flip = TRUE, alpha=0.5)
 ```
 
-
 ```{r}
-horizontal_boxplot <- function(data, xvar, yvar, ...) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_boxplot()  + 
-  labs(title=paste("Box plot of", xvar, "by", yvar), x =xvar, y = yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+ coord_flip()
-}
-```
-```{r}
-horizontal_boxplot(mtcars, "cyl", y="disp" ,fill=mtcars$am)
+boxplot(mtcars, "cyl", y="disp" ,fill="am", alpha=0.5)
 ```
 
 
