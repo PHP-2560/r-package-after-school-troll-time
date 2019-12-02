@@ -76,13 +76,6 @@ scatterplot(mtcars, "disp", "hp" ,color="cyl", shape =NULL, size = NULL, regress
 
 # histogram
 
-library(plyr)
-mu <- ddply(df, "sex", summarise, grp.mean=mean(weight))
-head(mu)
-```{r}
-ddply(mtcars, "cyl", summarise, grp.mean=mean(disp))
-```
-
 
 ```{r}
 histogram <- function(data, xvar, fill=NULL, group.mean = NULL, binwidth=200, alpha=.4, position="identity"){
@@ -246,9 +239,7 @@ boxplot(mtcars, "cyl", y="disp" ,fill="am", alpha=0.5)
 
 # correlation
 
-
 ```{r}
-
 correlation_plot <- function(data, sig.level = 0.01){
 col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
 tp <- Filter(is.numeric, data)
