@@ -1,4 +1,5 @@
-source("preprocess.R")
+# source("preprocess.R")
+library("preprocessHTT")
 source('variable_importance_plot.R')
 source('model_yijie.R')
 
@@ -25,9 +26,9 @@ ui <- navbarPage(
                      "text/comma-separated-values,text/plain",
                      ".csv")
         ),
-        tags$hr(),
-        checkboxInput("header", "Header", TRUE),
-        actionButton("reset", "reset")
+        tags$hr(),  
+        checkboxInput("header", "Header", TRUE)
+        # actionButton("reset", "reset")
       ),
       mainPanel(tableOutput("contents"))
     )
@@ -178,11 +179,11 @@ server <- function(input, output, session) {
     head(df)
   })
   
-  observeEvent(input$reset, {
-    output$contents <- renderTable({
-      df = req(getdat())
-      head(df)
-    })
+ # observeEvent(input$reset, {
+ #   output$contents <- renderTable({
+ #     df = req(getdat())
+ #     head(df)
+ #   })
     
   })
   

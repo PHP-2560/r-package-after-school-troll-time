@@ -56,6 +56,18 @@ standardization <- function(data, col) {
 ```
 
 ```{r}
+uniqueVar <- function(data) {
+  tp = rbind(rapply(data,function(x)length(unique(x))), rapply(mtcars,function(x)class(x)))
+  rownames(tp) = c("unique values", "class")
+  print(tp)
+}
+```
+
+```{r}
+uniqueVar(mtcars)
+```
+
+```{r}
 data = to_ordinal(mtcars, c("carb"))
 ```
 

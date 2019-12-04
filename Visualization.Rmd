@@ -22,149 +22,193 @@ library(RColorBrewer)
 # Scatterplot
 
 ```{r}
-scatterplot <- function(data, xvar, yvar, ...) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_point()  + 
-  labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+scatterplot <- function(data, xvar=xvar, yvar=yvar, color = cvar, shape = svar, size=zvar, 
+                        jitter_width=0, jitter_height = 0,
+                        regression = FALSE, method="auto", se=TRUE,fullrange=TRUE,
+                        facet = FALSE, fvar = NULL) {
+  basic <- ggplot(data, aes_string(x=xvar, y=yvar, color=color, shape = shape, size = size)) +  
+    # Jitter the points: Jitter range is 0.1 on the x-axis, .5 on the y-axis
+    geom_point(position = position_jitter(width=jitter_width,height=jitter_height))  + 
+    labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
+    theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+    # Add a loess smoothed fit curve with confidence region (by default includes 95% confidence region)
+  if (regression == TRUE){
+    basic <- basic+geom_smooth(method = method, se=se,fullrange = fullrange) 
+  }  
+  
+  if (facet == TRUE){
+    basic <- basic + facet_grid(. ~ data[, fvar])  
+  }
+  basic
 }
-```
 
-```{r}
-scatterplot(mtcars, "disp", "hp" ,color=mtcars$carb, shape = mtcars$am)
 ```
 
 
 ```{r}
-scatterplot_category <- function(data, xvar, yvar, ..., width=0.1, height=0.5 ) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-# Jitter the points: Jitter range is 0.1 on the x-axis, .5 on the y-axis
-  geom_point(position = position_jitter(width=width,height=height))  + 
-  labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
-}
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape ="am", size = NULL)
 ```
 
 ```{r}
-scatterplot_category(mtcars, "am", "hp" ,color=mtcars$carb, shape = mtcars$am)
+scatterplot(mtcars, "am", "hp" ,color="cyl", shape =NULL, size = NULL, jitter_height = 0.5, jitter_width = 0.1)
 ```
 
 
 ```{r}
-scatterplot_regression <- function(data, xvar, yvar, ..., method="auto", se=TRUE,fullrange=TRUE) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_point()  + 
-  labs(title=paste(xvar, "vs.", yvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
-  geom_smooth(method = method, se=se,fullrange = fullrange)   # Add a loess smoothed fit curve with confidence region 
-                             #  (by default includes 95% confidence region)
-}
-```
-```{r}
-scatterplot_regression(mtcars, "disp", "hp" ,color=mtcars$carb)
-```
-
-
-```{r}
-scatterplot_facet <- function(data, xvar, yvar, ..., fvar) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_point()  + 
-  labs(title=paste(xvar, "vs.", yvar, "by", fvar), x =xvar, y =yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
-  facet_grid(. ~ data[, fvar])  
-}
+scatterplot(mtcars, "disp", "hp" ,color="vs", size = NULL, shape = NULL, regression = TRUE)
 ```
 
 ```{r}
-scatterplot_facet(mtcars, "disp", "hp" ,color=mtcars$carb, fvar="cyl")
+scatterplot(mtcars, "disp", "hp" ,color="vs", size = NULL, shape = NULL, 
+            regression = TRUE, method = lm, se=FALSE, fullrange = FALSE)
+```
+
+```{r}
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape ="am", size = NULL,  facet = TRUE, fvar = "cyl")
+```
+
+
+```{r}
+scatterplot(mtcars, "disp", "hp" ,color="cyl", shape =NULL, size = NULL, regression = TRUE, method=lm, facet = TRUE, fvar = "cyl")
 ```
 
 
 
 # histogram
+
+
 ```{r}
-histogram <- function(data, xvar, ..., binwidth=200, alpha=.5, position="identity"){
-  ggplot(data, aes(x=data[,xvar],...)) +
+histogram <- function(data, xvar, fill=NULL, group.mean = NULL, binwidth=200, alpha=.4, position="identity"){
+  basic <- ggplot(data, aes_string(x=xvar, fill = fill)) +
   geom_histogram(binwidth=binwidth, alpha=alpha, position=position, colour="black")+ 
   labs(title=paste("Histogram of", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
+  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+  
+if (!is.null(group.mean)){
+  # calculate the mean value for each group  
+  foo <- function(data, facs, bar) {
+    res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
+    res
+  }
+  mu <- foo(data, group.mean, xvar)
+  
+  basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
+    labs(color=group.mean)
+}   else {
+  basic <- basic+
     geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
                color="red", linetype="dashed", size=1)
+}
+  basic
 }
 ```
 
 ```{r}
-histogram(mtcars, xvar = "hp", fill = mtcars$cyl)
+histogram(mtcars, xvar = "disp", fill = "vs", position = "identity",  binwidth=100,group.mean="vs")
 ```
 
-
-
-# Density plots
-ggplot(dat, aes(x=rating, colour=cond)) + geom_density()
-
-# Density plots with semi-transparent fill
-ggplot(dat, aes(x=rating, fill=cond)) + geom_density(alpha=.3)
 
 # densityplot
 
 ```{r}
-# Histogram overlaid with kernel density curve
-density <- function(data, xvar,..., binwidth=0.5){
-  ggplot(data, aes(x=data[,xvar],...)) + 
+density <- function(data, xvar,fill = NULL, group.mean = NULL, binwidth=0.5){
+  basic <- ggplot(data, aes_string(x=xvar,fill=fill)) + 
   geom_density(alpha=.2)+  # Overlay with transparent density plot 
   labs(title=paste("Density plot of", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
+  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+  
+if (!is.null(group.mean)){
+  # calculate the mean value for each group  
+  foo <- function(data, facs, bar) {
+    res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
+    res
+  }
+  mu <- foo(data, group.mean, xvar)
+  
+  basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
+    labs(color=group.mean)
+}   else {
+  basic <- basic+
     geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
                color="red", linetype="dashed", size=1)
+}
+  basic
 }
 ```
 
 ```{r}
-density(mtcars, xvar = "wt", fill=mtcars$cyl)
+density(mtcars, xvar = "wt", fill="cyl")
 ```
+```{r}
+density(mtcars, xvar = "wt", fill="cyl", group.mean="cyl")
+```
+
+
 
 # barplot
 
 ```{r}
-barplot <- function(data, xvar, position = "dodge",stat="identity",width=0.7,...) {
-ggplot(data, aes(x=data[, xvar], ...)) +   
-  geom_bar(position=position, stat=stat, width = width)  + 
+barplot <- function(data, xvar=xvar, yvar=NULL,fill=NULL,position = "dodge",stat="identity",width=0.7,coord_flip =FALSE,alpha=0.2,facet=FALSE, fvar=NULL,...) {
+  
+basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill,...)) +   
+  geom_bar(position=position, stat=stat, width = width, alpha=alpha)  + 
   labs(title=paste("Bar plot by", xvar), x =xvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+
+if (coord_flip==TRUE){
+  basic <- basic + coord_flip()
+} 
+
+if (facet==TRUE){
+  basic <- basic + facet_grid(. ~ data[, fvar])  
 }
-```
-```{r}
-barplot(mtcars, "am", y=mtcars$disp ,fill=mtcars$carb)
+
+basic
+
+}
 ```
 
 ```{r}
-barplot(mtcars, "carb", stat="count", fill=mtcars$am)
+barplot(mtcars, xvar = "am", yvar = "disp", fill="carb", facet=TRUE, fvar="cyl")
+```
+
+
+```{r}
+barplot(mtcars, "cyl", y="hp" ,fill="am", position="dodge", alpha=0.2)
+```
+
+
+
+```{r}
+barplot_aggregation <- function(data, xvar, yvar, agg.function = mean, 
+                                position = "dodge",width=0.7,coord_flip =FALSE,alpha=0.5,...) {
+    #calculate mean/max/min/sum value of x for each group
+    aggregation <- function(data, facs, bar, agg.function) {
+    res <- ddply(data, facs, function(dfr, colnm){agg.function(dfr[,colnm])}, bar)
+    res
+    }
+    table <- aggregation(data, xvar, yvar, agg.function=agg.function) 
+basic <-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1],...)) +   
+  geom_bar(position=position, stat="identity", width = width, alpha=alpha)  + 
+  labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by",xvar ), 
+       x=xvar, y=paste( as.character(substitute(agg.function)), "of", yvar), fill=xvar)+ 
+  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5)) 
+
+if (coord_flip==TRUE){
+  return(basic + coord_flip())
+} else{
+  return(basic)
+}  
+} 
+
 ```
 
 ```{r}
-horizontal_barplot <- function(data, xvar, position = "dodge",stat="identity",width=0.7,...) {
-ggplot(data, aes(x=data[, xvar], ...)) +   
-  geom_bar(position=position, stat=stat, width = width)  + 
-  labs(title=paste("Bar plot by", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+
-  coord_flip()
-}
-```
-```{r}
-horizontal_barplot(mtcars, "am", y=mtcars$disp ,fill=mtcars$carb)
+barplot_aggregation(mtcars, xvar = "gear", yvar="disp",agg.function = min)
 ```
 
 ```{r}
-barplot_facet <- function(data, xvar, position = "dodge",stat="identity",width=0.7,..., fvar) {
-ggplot(data, aes(x=data[, xvar], ...)) +   
-  geom_bar(position=position, stat=stat, width = width)  + 
-  labs(title=paste("Bar plot by", xvar), x =xvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5)) + 
-  facet_grid(. ~ data[, fvar])  
-}
-```
-```{r}
-barplot_facet(mtcars, "am", y=mtcars$disp, fill=mtcars$carb, fvar="cyl")
+barplot_aggregation(mtcars, xvar = "gear", yvar="disp",agg.function = mean, coord_flip = TRUE)
 ```
 
 
@@ -172,36 +216,30 @@ barplot_facet(mtcars, "am", y=mtcars$disp, fill=mtcars$carb, fvar="cyl")
 # boxplot
 
 ```{r}
-boxplot <- function(data, xvar, yvar, ...) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_boxplot()  + 
-  labs(title=paste("Box plot of", xvar, "by", yvar), x =xvar, y = yvar)+ 
+boxplot <- function(data, xvar, yvar, fill=NULL, coord_flip =FALSE, alpha=0.5, ...) {
+basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill,...)) +   
+  geom_boxplot(alpha=alpha)  + 
+  labs(title=paste("Box plot of", yvar, "by", xvar), x =xvar, y = yvar)+ 
   theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+
+if (coord_flip==TRUE){
+  basic <- basic + coord_flip()
+}
+basic
 }
 ```
 ```{r}
-boxplot(mtcars, "cyl", y="disp" ,fill=mtcars$am)
+boxplot(mtcars, "cyl", y="disp" ,fill="am", coord_flip = TRUE, alpha=0.5)
 ```
 
-
 ```{r}
-horizontal_boxplot <- function(data, xvar, yvar, ...) {
-ggplot(data, aes(x=data[, xvar], y=data[, yvar], ...)) +   
-  geom_boxplot()  + 
-  labs(title=paste("Box plot of", xvar, "by", yvar), x =xvar, y = yvar)+ 
-  theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))+ coord_flip()
-}
-```
-```{r}
-horizontal_boxplot(mtcars, "cyl", y="disp" ,fill=mtcars$am)
+boxplot(mtcars, "cyl", y="disp" ,fill="am", alpha=0.5)
 ```
 
 
 # correlation
 
-
 ```{r}
-
 correlation_plot <- function(data, sig.level = 0.01){
 col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
 tp <- Filter(is.numeric, data)
