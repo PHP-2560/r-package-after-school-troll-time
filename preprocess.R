@@ -17,7 +17,7 @@ one_hot <- function(data, col) {
   for (name in col){
     tp[,name] = as.factor(tp[,name])
   }
-  dmy <- dummyVars(paste("~", paste(col, collapse="+"), sep = ""), data = tp)
+  dmy <- caret::dummyVars(paste("~", paste(col, collapse="+"), sep = ""), data = tp)
   trsf <- data.frame(predict(dmy, newdata = tp, na.action = na.omit))
   return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
 }
