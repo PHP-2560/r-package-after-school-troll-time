@@ -7,8 +7,7 @@ new_model <-
   function(train,
            test,
            y,
-           model = "Xgboost (lighter)",
-           metrics = 'AUC',nfolds = 10,hyper_param=1,max_depth=5,ntrees=30,learn_rate=0.2)
+           model = "Xgboost (lighter)",nfolds = 10,hyper_param=1,max_depth=5,ntrees=30,learn_rate=0.2)
   {
     x <- setdiff(names(train), y)
     if (model == "Xgboost (lighter)") {
@@ -98,9 +97,13 @@ new_model <-
         fold_assignment =  "Modulo",
         laplace = 0
       )
-    }
+    }}
+
+
+
+print_result<-function(mymodel,test,metrics,model){
     
-    perf <- h2o.performance(my_model, newdata = test)
+    perf <- h2o.performance(mymodel,  test)
     auc <- round(as.numeric(h2o.auc(perf)),2)
     acc <- round(as.numeric(h2o.accuracy(perf, 0.5)),2)
     f1 <- round(as.numeric(h2o.F1(perf,0.5)),2)
