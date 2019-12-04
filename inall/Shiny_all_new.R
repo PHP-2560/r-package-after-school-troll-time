@@ -138,8 +138,37 @@ ui <- navbarPage(
     ),
     mainPanel(#textOutput("selected"),
       textOutput("result"),
-      actionButton('jumpToP2', 'Back'))
+      actionButton('jumpToP2', 'Back'),
+      actionButton('jumpToP4', 'Next'))
+  ),
+  
+  
+  tabPanel(
+    title = 'New dataset without labels',
+    value = 'panel4',
+    
+    sidebarLayout(
+      sidebarPanel(
+        fileInput(
+          "file2",
+          "Choose CSV File",
+          accept = c("text/csv",
+                     "text/comma-separated-values,text/plain",
+                     ".csv")
+        ),
+        tags$hr(),
+        checkboxInput("header", "Header", TRUE),
+        actionButton("Apply", "Apply the model"),
+        actionButton('jumpToP3', 'Back')
+      ),
+      mainPanel(tableOutput("contents2"),
+                textOutput("resultnew"))
+    )
   )
+  
+  
+  
+  
 )
   
   
@@ -166,6 +195,10 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "inTabset",
                       selected = "panel3")
   })
+  observeEvent(input$jumpToP4, {
+    updateTabsetPanel(session, "inTabset",
+                      selected = "panel4")
+  })
   
   #### Implementation from Hao
   
@@ -185,7 +218,7 @@ server <- function(input, output, session) {
  #     head(df)
  #   })
     
-  })
+ # })
   
   
   
@@ -288,14 +321,41 @@ server <- function(input, output, session) {
   train <- as.h2o(train)
   test <- as.h2o(test)
   
-  result <-new_model(train=train,test=test,y = y,
-                     metrics=model.metrics(),
+  my_model <-new_model(train=train,test=test,y = y,
                      model=model.model(),
                      hyper_param=model.hyper_param(),ntrees = model.ntrees(),max_depth = model.max_depth(),learn_rate = model.learn_rate())
+  
+  result<-print_result(my_model,test,metrics=model.metrics(),model=model.model())
   result
 })
+  #p4
+  
+  getnwedata1 <- reactive({
+    req(input$file2)
+    read.csv(file = input$file2$datapath, header = input$header)
+  })
   
   
+  getnewdata2 <- reactive({
+    df = req(getnwedata1())
+    tp = to_ordinal(df, input$ordinalselector) 
+    tp = one_hot(tp, input$onehotselector)
+    standardizer = standardization(tp, input$stdselector) 
+    tp = predict(standardizer, tp)
+    return(tp)
+  })
+
+  #output preprocessed dataset
+  output$contents2 <- renderTable({
+    head(req(getnewdata2()))
+  })
+  #apply the model
+  output$resultnew <- renderText({
+    getnewdata2<- as.h2o(getnewdata2)
+    finalmodel_predictions<-h2o.predict(
+      object = my_model
+      ,newdata = getnewdata2)
+    finalmodel_predictions$predict })
   
 }
 

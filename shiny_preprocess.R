@@ -1,5 +1,6 @@
 library(shiny) 
 library(DT)
+library(caret)
 source("preprocess.R")
 
 if (interactive()) {
@@ -19,10 +20,14 @@ if (interactive()) {
       ),
       mainPanel(
         tableOutput("contents")
-        
       )
-    )
   )
+  #,
+  # conditionalPanel(
+  #  condition = "input$file1",
+  #  sliderInput("breakCount", "Break Count", min=1, max=1000, value=10))
+)
+  
   
   server <- function(input, output, session) {
     
@@ -46,6 +51,7 @@ if (interactive()) {
     
     observeEvent(input$file1, {
       df = req(getdat())
+  
       insertUI(
         selector = "#contents",
         where = "afterEnd",

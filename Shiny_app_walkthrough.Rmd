@@ -1,0 +1,40 @@
+---
+title: "shiny_walkthrough"
+author: "Sida Li"
+date: "12/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Workflow for MegaPackage
+
+
+This project allows users to perform quick processing-preliminary modeling pipeline. The three component for this pipeline are preprocessing the data, visualization of feature importance plots, and fitting models and printing results.
+
+This walkthrough is based on mtcars dataset. The shiny app first reads in the dataset, preprocesses variables (one hot encode, convert to ordinal levels, and normalize variables) according to the user’s choice. After this transformation the user is then taken to the second page in which feature importance plots are shown according to Gradient Boosting Machine or Neural Networks, again according to the user’s choice. The user should then proceed to the third page in which the user can tune parameters for our listed models on the page according to any of the three metrics (AUC, Accuracy, and F1 score). 
+
+## ‘Read in dataset’ tab
+
+As you run the package, you are automatically taken to the first page under the tab ‘Read in dataset.’  Use the ‘Browse…’ button to navigate to the location of the file and read it. In the case of mtcars, once you have read in the data after upload complete bar is filled, you will find a header of the dataset on the right main panel. You will find that by default the ‘Header’ checkbox is selected. When this checkbox is selected, the first row of the dataset will be taken as the row describing variable names. If you uncheck this box, you will find that the feature names are now given in the form of ‘Vn’ and, in the case of mtcars, the first row of the data is erroneously read in as a data entry.
+
+Below in the main column you will see six interactive components. The first three fall into a group; the following two follows a group, and you have a final confirm button.
+
+The first three columns allow you to select your preprocessing. You may select multiple columns for each of these transformations. Be careful not to select a column for multiple preprocessors; they are not intended to be mutually compatible conceptually or functionally, and selecting a variable for multiple transformations at the same time will result in an error.
+
+The following two interactive components asks the user to select the response variable and the percentage of data retained for testing, respectively. Be sure not to one-hot encode the target column, as this makes neither conceptual nor in this implementation functional sense. 
+
+Hitting the confirm button will take you to the second tab; if you revisit the first tab, you will find that the header of the dataset shows preprocessed columns. The dataset is passed onto the second and third column as you have specified in the first page.
+
+Please note: every time you would like to read a new file, please refresh the page.
+
+## ‘Variable Importance Plot’ tab
+
+You will see variable importance ranks gathered from two different methods: Gradient Boosting Machine and Neural Network based. Under the hood a GBM or a Neural Network model is being trained mapping from the predictors to the response variables, and the variable importance plot is based on this model. Because of neural networks have stochastic components including starting points, learning rates, batch size and so forth, the importances from Neural Network Based methods are not fixed––they may change within each selection and thus may change the order of variable importance. The Gradient Boosting Machine, on the other hand, should produce a fixed list of importances.
+
+The models and the plots are functionalities of h2o, an open-source machine learning platform.
+
+## ‘Modeling’ tab
+
+Having preprocessed and seen the variable importance plot, you should proceed to the ‘Modeling’ tab. There you will see seven ML modeling options. Except the Naive Bayes model, which does not have parameters to tune, you will see the parameters you may tune for each option. Additionally you may select concurrently any of the metrics. Once you have selected a model and metrics, simply click ‘Select’, and you will see the model performance on the right main panel.
