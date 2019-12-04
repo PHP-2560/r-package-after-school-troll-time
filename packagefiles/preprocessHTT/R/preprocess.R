@@ -22,10 +22,10 @@ one_hot <- function(data, col) {
   return(cbind(tp[,!(colnames(tp) %in% col)], trsf))
 }
 
-to_ordinal <- function(data, col) {
+to_ordinal <- function(data, col, ...) {
   tp <- data
   for (name in col){
-    tp[,name] = factor(tp[,name])
+    tp[,name] = factor(tp[,name],...)
   }
   return(tp)
 }
@@ -43,4 +43,5 @@ uniqueVar <- function(data) {
   print(tp)
 }
 
-
+to_ordinal(mtcars, "gear",levels=c(5,3,4))$gear
+to_ordinal(mtcars, "gear")$gear
