@@ -9,7 +9,7 @@ convert selected columns in a given dataset to ordinal data (input has to be num
 return an editted dataset
 }
 \usage{
-to_ordinal(data, col)
+to_ordinal(data, col, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +18,9 @@ input data
 }
   \item{col}{
 columns to convert to ordinal type
+}
+  \item{levels}{
+an optional vector of the unique values (as character strings) that x might have taken. The default is the unique set of values taken by as.character(x), sorted into increasing order of x. Note that this set can be specified as smaller than sort(unique(x))
 }
 }
 \details{
@@ -46,6 +49,14 @@ columns to convert to ordinal type
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+> to_ordinal(mtcars, "gear",levels=c(5,3,4))$gear
+ [1] 4 4 4 3 3 3 3 4 4 4 4 3 3 3 3 3 3 4 4 4 3 3 3 3 3 4 5 5 5 5 5 4
+Levels: 5 3 4 \cr
+> to_ordinal(mtcars, "gear")$gear
+ [1] 4 4 4 3 3 3 3 4 4 4 4 3 3 3 3 3 3 4 4 4 3 3 3 3 3 4 5 5 5 5 5 4
+Levels: 3 4 5
+
+function code:
 function (data, col)
 {
     tp <- data
@@ -57,5 +68,3 @@ function (data, col)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
