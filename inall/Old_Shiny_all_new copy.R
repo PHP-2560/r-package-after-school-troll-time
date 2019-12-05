@@ -1,5 +1,6 @@
 # source("preprocess.R")
 library("preprocessHTT")
+library(markdown)
 source('variable_importance_plot.R')
 source('model_yijie.R')
 
@@ -14,6 +15,11 @@ ui <- navbarPage(
   
   #### Define the first page to read in our dataset
   tabPanel(
+    title = 'Tutorial',
+    value = 'panel0',
+    includeHTML("Shiny_app_walkthrough.html")
+  ),
+  tabPanel(
     title = 'Read in dataset',
     value = 'panel1',
     
@@ -21,7 +27,7 @@ ui <- navbarPage(
       sidebarPanel(
         fileInput(
           "file1",
-          "Choose CSV File",
+          "Choose CSV File, refresh page to upload new file",
           accept = c("text/csv",
                      "text/comma-separated-values,text/plain",
                      ".csv")
