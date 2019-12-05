@@ -7,7 +7,7 @@ source('model_yijie.R')
 
 library(shiny)
 ui <- navbarPage(
-  'Mega Project',
+  'Binary Classification Project',
   id = "inTabset",
   
   ### Define the title of different pages;
@@ -197,21 +197,24 @@ server <- function(input, output, session) {
   
   observeEvent(input$file1, {
     df = req(getdat())
+    targetcols = colnames(df[uniqueVar(df)["unique values",]==2])
+    othercols = colnames(df[uniqueVar(df)["unique values",]>2])
     insertUI(
       selector = "#contents",
       where = "afterEnd",
       ui = mainPanel(
-        checkboxGroupInput("onehotselector","select columns to one hot encode",colnames(df),inline=TRUE),
-        checkboxGroupInput("ordinalselector","select columns to convert to ordinal",colnames(df),inline=TRUE),
-        checkboxGroupInput("stdselector","select columns to standardize",colnames(df),inline=TRUE),
-        selectInput(inputId = 'y',label = 'Select target column',choices = colnames(df)),
+        checkboxGroupInput("onehotselector","select columns to one hot encode",othercols,inline=TRUE),
+        checkboxGroupInput("ordinalselector","select columns to convert to ordinal",othercols,inline=TRUE),
+        checkboxGroupInput("stdselector","select columns to standardize",othercols,inline=TRUE),
         numericInput("testp", "test data percentage", 0.2, min = 0, max = 1, step = 0.1, width = NULL),
+        selectInput(inputId = 'y',label = 'Select target (binary) column',choices = targetcols),
         actionButton("confirmonehot", "confirm")
       )
     )
   })
   
-
+  # selectInput(inputId = 'y',label = 'Select target column',choices = targetcolselector())
+  
   #  to use training data, simply call  
   #  df = req(getdat2()$train)
   #  to use testing data, simply call  

@@ -40,7 +40,7 @@ standardization <- function(data, col) {
 uniqueVar <- function(data) {
   tp = rbind(rapply(data,function(x)length(unique(x))), rapply(mtcars,function(x)class(x)))
   rownames(tp) = c("unique values", "class")
-  print(tp)
+  return(tp)
 }
 
 to_ordinal(mtcars, "gear",levels=c(5,3,4))$gear
