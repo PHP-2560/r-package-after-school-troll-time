@@ -294,10 +294,11 @@ server <- function(input, output, session) {
   train <- as.h2o(train)
   test <- as.h2o(test)
   
-  result <-new_model(train=train,test=test,y = y,
-                     metrics=model.metrics(),
-                     model=model.model(),
-                     hyper_param=model.hyper_param(),ntrees = model.ntrees(),max_depth = model.max_depth(),learn_rate = model.learn_rate())
+  my_model <-new_model(train=train,test=test,y = y,
+                       model=model.model(),
+                       hyper_param=model.hyper_param(),ntrees = model.ntrees(),max_depth = model.max_depth(),learn_rate = model.learn_rate())
+  
+  result<-print_result(my_model,test,metrics=model.metrics(),model=model.model())
   result
 })
   
