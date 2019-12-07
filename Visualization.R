@@ -5,10 +5,14 @@ library(RColorBrewer)
 
 
 
-scatterplot <- function(data, xvar=xvar, yvar=yvar, color = cvar, shape = svar, size=zvar, 
+scatterplot <- function(data, xvar, yvar=yvar, color = cvar, shape = svar, size=zvar, 
                         jitter_width=0, jitter_height = 0,
                         regression = FALSE, method="auto", se=TRUE,fullrange=TRUE,
                         facet = FALSE, fvar = NULL) {
+  if (color == "NULL"){color = NULL}
+  if (shape == "NULL"){shape = NULL}
+  if (size == "NULL"){size = NULL}
+  
   basic <- ggplot(data, aes_string(x=xvar, y=yvar, color=color, shape = shape, size = size)) +  
     # Jitter the points: Jitter range is 0.1 on the x-axis, .5 on the y-axis
     geom_point(position = position_jitter(width=jitter_width,height=jitter_height))  + 
@@ -26,23 +30,26 @@ scatterplot <- function(data, xvar=xvar, yvar=yvar, color = cvar, shape = svar, 
 }
 
 
-histogram <- function(data, xvar, fill=NULL, group.mean = NULL, binwidth=200, alpha=.4, position="identity"){
-  basic <- ggplot(data, aes_string(x=xvar, fill = fill)) +
+histogram <- function(data, xvar, group="NULL", binwidth=200, alpha=.4, position="identity"){
+  if (group == "NULL"){
+    group = NULL
+  }
+  basic <- ggplot(data, aes_string(x=xvar, fill = group)) +
     geom_histogram(binwidth=binwidth, alpha=alpha, position=position, colour="black")+ 
     labs(title=paste("Histogram of", xvar), x =xvar)+ 
     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
   
-  if (!is.null(group.mean)){
+  if (!is.null(group)){
     # calculate the mean value for each group  
     foo <- function(data, facs, bar) {
       res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
       res
     }
-    mu <- foo(data, group.mean, xvar)
+    mu <- foo(data, group, xvar)
     
     basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
-      labs(color=group.mean)
-  }   else {
+      labs(color=group)
+  } else {
     basic <- basic+
       geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
                  color="red", linetype="dashed", size=1)
@@ -51,22 +58,25 @@ histogram <- function(data, xvar, fill=NULL, group.mean = NULL, binwidth=200, al
 }
 
 
-density <- function(data, xvar,fill = NULL, group.mean = NULL, binwidth=0.5){
-  basic <- ggplot(data, aes_string(x=xvar,fill=fill)) + 
-    geom_density(alpha=.2)+  # Overlay with transparent density plot 
+density <- function(data, xvar,group = "NULL", alpha=0.2){
+  if (group == "NULL"){
+    group = NULL
+  }
+  basic <- ggplot(data, aes_string(x=xvar,fill=group)) + 
+    geom_density(alpha=alpha)+  # Overlay with transparent density plot 
     labs(title=paste("Density plot of", xvar), x =xvar)+ 
     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
   
-  if (!is.null(group.mean)){
+  if (!is.null(group)){
     # calculate the mean value for each group  
     foo <- function(data, facs, bar) {
       res <- ddply(data, facs, function(dfr, colnm){mean(dfr[,colnm])}, bar)
       res
     }
-    mu <- foo(data, group.mean, xvar)
+    mu <- foo(data, group, xvar)
     
     basic <- basic  + geom_vline(data=mu, aes(xintercept=V1, color=mu[,1]),linetype="dashed")+
-      labs(color=group.mean)
+      labs(color=group)
   }   else {
     basic <- basic+
       geom_vline(aes(xintercept=mean(data[,xvar], na.rm=T)),   # Ignore NA values for mean
@@ -76,9 +86,12 @@ density <- function(data, xvar,fill = NULL, group.mean = NULL, binwidth=0.5){
 }
 
 
-barplot <- function(data, xvar=xvar, yvar=NULL,fill=NULL,position = "dodge",stat="identity",width=0.7,coord_flip =FALSE,alpha=0.2,facet=FALSE, fvar=NULL,...) {
+barplot <- function(data, xvar=xvar, yvar="NULL",fill="NULL",position = "dodge",stat="identity",width=0.7,coord_flip =FALSE,alpha=0.2,facet=FALSE, fvar="NULL") {
+  if (yvar == "NULL"){yvar = NULL}
+  if (fill == "NULL"){fill = NULL}
+  if (fvar == "NULL"){fcar = NULL}
   
-  basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill,...)) +   
+  basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill)) +   
     geom_bar(position=position, stat=stat, width = width, alpha=alpha)  + 
     labs(title=paste("Bar plot by", xvar), x =xvar)+ 
     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
@@ -96,14 +109,14 @@ barplot <- function(data, xvar=xvar, yvar=NULL,fill=NULL,position = "dodge",stat
 }
 
 barplot_aggregation <- function(data, xvar, yvar, agg.function = mean, 
-                                position = "dodge",width=0.7,coord_flip =FALSE,alpha=0.5,...) {
+                                position = "dodge",width=0.7,coord_flip =FALSE,alpha=0.5) {
   #calculate mean/max/min/sum value of x for each group
   aggregation <- function(data, facs, bar, agg.function) {
     res <- ddply(data, facs, function(dfr, colnm){agg.function(dfr[,colnm])}, bar)
     res
   }
   table <- aggregation(data, xvar, yvar, agg.function=agg.function) 
-  basic <-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1],...)) +   
+  basic <-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1])) +   
     geom_bar(position=position, stat="identity", width = width, alpha=alpha)  + 
     labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by",xvar ), 
          x=xvar, y=paste( as.character(substitute(agg.function)), "of", yvar), fill=xvar)+ 
@@ -117,8 +130,9 @@ barplot_aggregation <- function(data, xvar, yvar, agg.function = mean,
 } 
 
 
-boxplot <- function(data, xvar, yvar, fill=NULL, coord_flip =FALSE, alpha=0.5, ...) {
-  basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill,...)) +   
+boxplot <- function(data, xvar, yvar, fill="NULL", coord_flip =FALSE, alpha=0.5) {
+  if (fill == "NULL"){fill = NULL}
+  basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill)) +   
     geom_boxplot(alpha=alpha)  + 
     labs(title=paste("Box plot of", yvar, "by", xvar), x =xvar, y = yvar)+ 
     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
@@ -160,7 +174,7 @@ correlation_plot <- function(data, sig.level = 0.01){
            # Combine with significance
            p.mat = p.mat, sig.level = sig.level, insig = "blank", 
            # hide correlation coefficient on the principal diagonal
-           diag=FALSE , title = "Correlation Plot"
+           diag=FALSE
   )
 }
 # Source: http://www.sthda.com/english/wiki/visualize-correlation-matrix-using-correlogram
