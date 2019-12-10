@@ -110,17 +110,17 @@ print_result<-function(mymodel,test,metrics,model){
     
     result <- c()
     if ( 'AUC' %in% metrics) {
-      result <- c(result, paste("\nThe AUC of the " , model, "is", auc,".\n"))
+      result <- c(result, paste("The AUC of the " , model, "is", "<font color='#7ED13E'>", auc,'</font>.'))
     }
     if ('Accuracy' %in% metrics) {
       result <-
         c(result,
-          paste("\nThe accuracy of the " , model, "is", acc,".\n"))
+          paste("The accuracy of the " , model, "is","<font color='#7ED13E'>", acc,'</font>.'))
     }
     if ('F1' %in% metrics) {
       result <-
         c(result,
-          paste("\nThe F1 score of the " ,model, "is", f1,".\n"))
+          paste("The F1 score of the " ,model, "is", "<font color='#7ED13E'>", f1,'</font>.'))
     }
     return(result)
   }

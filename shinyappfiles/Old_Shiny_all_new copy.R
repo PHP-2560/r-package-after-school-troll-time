@@ -143,7 +143,7 @@ ui <- navbarPage(
       actionButton("select", "Select")
     ),
     mainPanel(#textOutput("selected"),
-      textOutput("result"),
+      htmlOutput("result"),
       actionButton('jumpToP2', 'Back'))
   )
 )
@@ -284,7 +284,7 @@ server <- function(input, output, session) {
   })
   
   
-  output$result <- renderText({
+  output$result <- renderUI({
   train<-getdat2()$train
   test <-getdat2()$test
   y <- input$y
@@ -302,7 +302,7 @@ server <- function(input, output, session) {
                        hyper_param=model.hyper_param(),ntrees = model.ntrees(),max_depth = model.max_depth(),learn_rate = model.learn_rate())
   
   result<-print_result(my_model,test,metrics=model.metrics(),model=model.model())
-  result
+  HTML(paste("<font face = 'verdana' size='5'>", paste(result, collapse='<br/>'), '</font>'))
 })
   
   
