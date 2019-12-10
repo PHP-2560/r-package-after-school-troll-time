@@ -64,56 +64,57 @@ ui <- fluidPage(
                         )
                       )
              ),
-             # tabPanel("Bar Chart",
-             #          sidebarLayout(
-             #            sidebarPanel(
-             #              selectInput('bar_xvar', 'X-axis Variable', names(data)),
-             #              selectInput('bar_yvar', 'Y-axis Variable', names(data), selected=names(data)[[2]]),
-             #              selectInput('bar_fill', 'Color Variable', c("NULL", names(data)), selected="NULL"),
-             #              selectInput('bar_position', 'Position: ', c("identity", "dodge","stack"), selected="identity"),
-             #              sliderInput(inputId = "bar_alpha",
-             #                          label = "Adjust Transparency (Alpha)",
-             #                          value = 0.5, min = 0.1, max = 1),
-             #              numericInput(inputId = "bar_width",
-             #                           label = "Adjust width",
-             #                           value = 0.7),
-             #              radioButtons("bar_coord_flip",
-             #                           choices = list("TRUE" ,  "FALSE"), selected = "FALSE", inline=T),
-             #              radioButtons("bar_facet",
-             #                           choices = list("TRUE" ,  "FALSE"), selected = "FALSE", inline=T),
-             #              selectInput('bar_fvar', 'Faceting Variable', c("NULL", names(data)), selected="NULL")
-             #            ), # TODO：注意TRUE FALSE是否有效
-             #            mainPanel(
-             #              plotOutput("bar")
-             #            )
-             #          )
-             #),
-             # tabPanel("Box Plot",
-             #          sidebarLayout(
-             #            sidebarPanel(
-             #              selectInput('box_xvar', 'X-axis Variable', names(data)),
-             #              selectInput('box_yvar', 'Y-axis Variable', names(data), selected=names(data)[[2]]),
-             #              selectInput('box_fill', 'Color Variable', c("NULL", names(data)), selected="NULL"),
-             #              sliderInput(inputId = "box_alpha",
-             #                          label = "Adjust Transparency (Alpha)",
-             #                          value = 0.5, min = 0.1, max = 1),
-             #              radioButtons("box_coord_flip",
-             #                           choices = list("TRUE" ,  "FALSE"), selected = "FALSE", inline=T)
-             #              # TODO：注意TRUE FALSE是否有效
-             # 
-             #            ),
-             #            mainPanel(
-             #              plotOutput("box")
-             #            )
-             #          )
-             #  ) ,
+             tabPanel("Bar Chart",
+                      sidebarLayout(
+                        sidebarPanel(
+                          selectInput('bar_xvar', 'X-axis Variable', names(data)),
+                          selectInput('bar_yvar', 'Y-axis Variable', names(data), selected=names(data)[[2]]),
+                          selectInput('bar_fill', 'Color Variable', c("NULL", names(data)), selected="NULL"),
+                          selectInput('bar_position', 'Position: ', c("identity", "dodge","stack"), selected="identity"),
+                          sliderInput(inputId = "bar_alpha",
+                                      label = "Adjust Transparency (Alpha)",
+                                      value = 0.5, min = 0.1, max = 1),
+                          numericInput(inputId = "bar_width",
+                                       label = "Adjust width",
+                                       value = 0.7)
+                          # ,
+                          # # radioButtons("bar_coord_flip",
+                          # #              choices = list("TRUE" ,  "FALSE"), selected = "FALSE", inline=T),
+                          # radioButtons("bar_facet",
+                          #              choices = list("TRUE" ,  "FALSE"), selected = "FALSE", inline=T),
+                          # selectInput('bar_fvar', 'Faceting Variable', c("NULL", names(data)), selected="NULL")
+                        ),
+                        mainPanel(
+                          plotOutput("bar")
+                        )
+                      )
+             ),
+             tabPanel("Box Plot",
+                      sidebarLayout(
+                        sidebarPanel(
+                          selectInput('box_xvar', 'X-axis Variable', names(data)),
+                          selectInput('box_yvar', 'Y-axis Variable', names(data), selected=names(data)[[2]]),
+                          selectInput('box_fill', 'Color Variable', c("NULL", names(data)), selected="NULL"),
+                          sliderInput(inputId = "box_alpha",
+                                      label = "Adjust Transparency (Alpha)",
+                                      value = 0.5, min = 0.1, max = 1)
+                          # ,
+                          # radioButtons("box_coord_flip",
+                          #              choices = list("TRUE" ,  "FALSE"), selected = "FALSE", inline=T)
+
+                        ),
+                        mainPanel(
+                          plotOutput("box")
+                        )
+                      )
+              ) ,
              tabPanel("Correlation Plot",
                       sidebarLayout(
                         sidebarPanel(
                           selectInput('sig.level', 'Choose Significance Level', c(0.01,0.05,0.1))
                         ),
                         mainPanel(
-                          plotOutput("correlation")
+                          plotOutput("corr")
                         )
                       )
              )
@@ -134,15 +135,17 @@ server <- function(input, output) {
   output$dens <- renderPlot({
     density(data, input$dens_xvar, input$dens_group, input$dens_alpha)})
 
-  # output$bar <- renderPlot({
-  #   barplot(data, input$bar_xvar, input$bar_yvar, input$bar_fill, input$bar_position, input$bar_width, input$bar_coord_flip,
-  #           input$bar_alpha, input$bar_facet, input$bar_fvar)})
+  output$bar <- renderPlot({
+    barplot(data, input$bar_xvar, input$bar_yvar, input$bar_fill, input$bar_position, input$bar_width,
+            input$bar_alpha)})    # , input$bar_coord_flip, input$bar_facet, input$bar_fvar
 
-  # output$box <- renderPlot({
-  #   boxplot(data, input$box_xvar, input$box_yvar, input$box_fill, input$box_coord_flip, input$box_alpha)})
+  output$box <- renderPlot({
+    boxplot(data, input$box_xvar, input$box_yvar, input$box_fill,  input$box_alpha)})   #, input$box_coord_flip
 
-  output$correlation <- renderPlot({
+  output$corr <- renderPlot({
     correlation_plot(data, input$sig.level)})
+  
+  #output$pvalue <- renderText({cor_pvalue(data, input$sig.level)})
 
 }
 
