@@ -86,64 +86,64 @@ density <- function(data, xvar,group = "NULL", alpha=0.2){
 }
 
 
-barplot <- function(data, xvar=xvar, yvar="NULL",fill="NULL",position = "dodge",stat="identity",width=0.7,coord_flip =FALSE,alpha=0.2,facet=FALSE, fvar="NULL") {
-  if (yvar == "NULL"){yvar = NULL}
+barplot <- function(data, xvar, yvar="NULL",fill="NULL",position = "dodge", 
+                    width=0.7,alpha=0.2) {     # facet="FALSE", fvar="NULL",
+  if (yvar == "NULL"){yvar = NULL} 
   if (fill == "NULL"){fill = NULL}
-  if (fvar == "NULL"){fcar = NULL}
+  # if (fvar == "NULL"){fcar = NULL}
   
   basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill)) +   
-    geom_bar(position=position, stat=stat, width = width, alpha=alpha)  + 
+    geom_bar(position=position, stat="identity", width = width, alpha=alpha)  + 
     labs(title=paste("Bar plot by", xvar), x =xvar)+ 
     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
-  
-  if (coord_flip==TRUE){
-    basic <- basic + coord_flip()
-  } 
-  
-  if (facet==TRUE){
-    basic <- basic + facet_grid(. ~ data[, fvar])  
-  }
+  # ,coord_flip ="FALSE"
+  # if (coord_flip=="TRUE"){
+  #   basic <- basic + coord_flip()
+  # } 
+  # 
+  # if (facet=="TRUE"){
+  #   basic <- basic + facet_grid(. ~ data[, fvar])
+  # }
   
   basic
-  
 }
 
-barplot_aggregation <- function(data, xvar, yvar, agg.function = mean, 
-                                position = "dodge",width=0.7,coord_flip =FALSE,alpha=0.5) {
-  #calculate mean/max/min/sum value of x for each group
-  aggregation <- function(data, facs, bar, agg.function) {
-    res <- ddply(data, facs, function(dfr, colnm){agg.function(dfr[,colnm])}, bar)
-    res
-  }
-  table <- aggregation(data, xvar, yvar, agg.function=agg.function) 
-  basic <-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1])) +   
-    geom_bar(position=position, stat="identity", width = width, alpha=alpha)  + 
-    labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by",xvar ), 
-         x=xvar, y=paste( as.character(substitute(agg.function)), "of", yvar), fill=xvar)+ 
-    theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5)) 
-  
-  if (coord_flip==TRUE){
-    return(basic + coord_flip())
-  } else{
-    return(basic)
-  }  
-} 
+# barplot_aggregation <- function(data, xvar, yvar, agg.function = mean,
+#                                 position = "dodge",width=0.7,coord_flip =FALSE,alpha=0.5) {
+#   #calculate mean/max/min/sum value of x for each group
+#   aggregation <- function(data, facs, bar, agg.function) {
+#     res <- ddply(data, facs, function(dfr, colnm){agg.function(dfr[,colnm])}, bar)
+#     res
+#   }
+#   table <- aggregation(data, xvar, yvar, agg.function=agg.function)
+#   basic <-  ggplot(table, aes(x=table[,1], y=table[,2],fill=table[,1])) +
+#     geom_bar(position=position, stat="identity", width = width, alpha=alpha)  +
+#     labs(title=paste( as.character(substitute(agg.function)), "of", yvar, "by",xvar ),
+#          x=xvar, y=paste( as.character(substitute(agg.function)), "of", yvar), fill=xvar)+
+#     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
+# 
+#   if (coord_flip==TRUE){
+#     return(basic + coord_flip())
+#   } else{
+#     return(basic)
+#   }
+# }
 
 
-boxplot <- function(data, xvar, yvar, fill="NULL", coord_flip =FALSE, alpha=0.5) {
+boxplot <- function(data, xvar, yvar, fill="NULL",  alpha=0.5) {  # coord_flip ="FALSE",
   if (fill == "NULL"){fill = NULL}
   basic <- ggplot(data, aes_string(x=xvar, y=yvar, fill=fill)) +   
     geom_boxplot(alpha=alpha)  + 
     labs(title=paste("Box plot of", yvar, "by", xvar), x =xvar, y = yvar)+ 
     theme(plot.title = element_text(color = "black", size = 15, face = "bold",hjust = 0.5))
   
-  if (coord_flip==TRUE){
-    basic <- basic + coord_flip()
-  }
+  # if (coord_flip=="TRUE"){
+  #   basic <- basic + coord_flip()
+  # }
   basic
 }
 
-correlation_plot <- function(data, sig.level = 0.01){
+correlation_plot <- function(data, sig.level = 0.05){
   col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
   tp <- Filter(is.numeric, data)
   M<-cor(tp)
@@ -179,3 +179,29 @@ correlation_plot <- function(data, sig.level = 0.01){
 }
 # Source: http://www.sthda.com/english/wiki/visualize-correlation-matrix-using-correlogram
 
+cor_pvalue <- function(data, sig.level = 0.01){
+  col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+  tp <- Filter(is.numeric, data)
+  M<-cor(tp)
+  
+  
+  # mat : is a matrix of data
+  cor.mtest <- function(mat, ...) {
+    mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+      for (j in (i + 1):n) {
+        tmp <- cor.test(mat[, i], mat[, j], ...)
+        p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+      }
+    }
+    colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+    p.mat
+  }
+  # matrix of the p-value of the correlation
+  p.mat <- cor.mtest(tp)
+  return(p.mat) 
+
+}
