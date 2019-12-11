@@ -309,8 +309,8 @@ $(document).ready(function () {
 </div>
 
 
-<div id="workflow---ml-pipeline-for-binay-classification" class="section level1">
-<h1>Workflow - ML Pipeline for Binay Classification</h1>
+<div id="workflow---ml-pipeline-for-binary-classification" class="section level1">
+<h1>Workflow - ML Pipeline for Binary Classification</h1>
 <p>This project allows users to perform a quick processing-preliminary modeling pipeline for <strong>Binary Classification</strong>. The three components for this pipeline are preprocessing the data, visualization of feature importance plots, and fitting models and printing results.</p>
 <p>This walkthrough is based on mtcars dataset. The shiny app first reads in the dataset, preprocesses variables (one hot encode, convert to ordinal levels, and normalize variables) according to the user’s choice. After this transformation, the user is then taken to the second page in which feature importance plots are shown according to Gradient Boosting Machine or Neural Networks, again according to the user’s choice. The user should then proceed to the third page in which the user can tune parameters for our listed models on the page according to any of the three metrics (AUC, Accuracy, and F1 score).</p>
 <p><strong>input</strong>: The input needs to be a clean dataset (no missing values, no unneeded columns, etc.). For example, if we want to use the mtcars dataset, we need to remove the “model” column.</p>

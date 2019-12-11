@@ -2,7 +2,7 @@
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-# Workflow - ML Pipeline for Binay Classification
+# Workflow - ML Pipeline for Binary Classification
 
 
 This project allows users to perform a quick processing-preliminary modeling pipeline for **Binary Classification**. The three components for this pipeline are preprocessing the data, visualization of feature importance plots, and fitting models and printing results.
