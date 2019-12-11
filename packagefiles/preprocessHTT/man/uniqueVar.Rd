@@ -42,6 +42,15 @@ the input dataset
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+##
+> uniqueVar(mtcars)
+              mpg       cyl       disp      hp        drat      wt        qsec
+unique values "25"      "3"       "27"      "22"      "22"      "29"      "30"
+class         "numeric" "numeric" "numeric" "numeric" "numeric" "numeric" "numeric"
+              vs        am        gear      carb
+unique values "2"       "2"       "3"       "6"
+class         "numeric" "numeric" "numeric" "numeric"
+
 ## The function is currently defined as
 
 uniqueVar <- function(data) {
@@ -49,7 +58,6 @@ uniqueVar <- function(data) {
   rownames(tp) = c("unique values", "class")
   print(tp)
 }
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

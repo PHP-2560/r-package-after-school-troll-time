@@ -5,7 +5,7 @@
 Standardization
 }
 \description{
-Standardize selected columns in a given dataset, return the editted dataset
+Standardize selected columns in a given dataset, return a standardizer that can be used to standardize datasets using "predict" function (see examples)
 }
 \usage{
 standardization(data, col)
@@ -45,6 +45,16 @@ columns to perform standardization
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+##
+> standardizer <- standardization(mtcars, c("mpg","wt"))
+> predict(standardizer, mtcars)
+                            mpg cyl  disp  hp drat           wt  qsec vs am gear carb
+Mazda RX4            0.15088482   6 160.0 110 3.90 -0.610399567 16.46  0  1    4    4
+Mazda RX4 Wag        0.15088482   6 160.0 110 3.90 -0.349785269 17.02  0  1    4    4
+Datsun 710           0.44954345   4 108.0  93 3.85 -0.917004624 18.61  1  1    4    1
+Hornet 4 Drive       0.21725341   6 258.0 110 3.08 -0.002299538 19.44  1  0    3    1
+Hornet Sportabout   -0.23073453   8 360.0 175 3.15  0.227654255 17.02  0  0    3    2
+...
 
 ## The function is currently defined as
 function (data, col)

@@ -45,7 +45,24 @@ columns to perform one hot encoding
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-function (data, col)
+##
+> one_hot(mtcars, c("gear", "cyl"))
+                     mpg  disp  hp drat    wt  qsec vs am carb gear.3 gear.4 gear.5 cyl.4
+Mazda RX4           21.0 160.0 110 3.90 2.620 16.46  0  1    4      0      1      0     0
+Mazda RX4 Wag       21.0 160.0 110 3.90 2.875 17.02  0  1    4      0      1      0     0
+Datsun 710          22.8 108.0  93 3.85 2.320 18.61  1  1    1      0      1      0     1
+Hornet 4 Drive      21.4 258.0 110 3.08 3.215 19.44  1  0    1      1      0      0     0
+Hornet Sportabout   18.7 360.0 175 3.15 3.440 17.02  0  0    2      1      0      0     0
+                    cyl.6 cyl.8
+Mazda RX4               1     0
+Mazda RX4 Wag           1     0
+Datsun 710              0     0
+Hornet 4 Drive          1     0
+Hornet Sportabout       0     1
+...
+
+## the function is currently defined as
+one_hot <- function (data, col)
 {
     if (length(col) == 0) {
         return(data)
