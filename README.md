@@ -1,4 +1,6 @@
-Note: R package files are in packagefiles folder    
+## Note: 
+
+R package files are in packagefiles folder    
 Shiny app files are in shinyappfiles folder    
 Presentation has been done in office hour     
 
