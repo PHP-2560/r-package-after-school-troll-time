@@ -2,7 +2,7 @@ Note: R package files are in packagefiles folder
 Shiny app files are in shinyappfiles folder    
 Presentation has been done in office hour     
 
-Contributions:   
+## Contributions:   
 All:   
     -1. Each team member wrote at least one function for the package.   
 **Hao**:   
